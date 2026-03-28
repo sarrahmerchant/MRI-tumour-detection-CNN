@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
@@ -20,25 +22,38 @@ transforms = transforms.Compose([
 dataset = datasets.ImageFolder(root='../data/Training', transform=transforms)
 dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
-for images, labels in dataloader:
-    print(images.shape)
-    print(labels)
+if torch.backends.mps.is_available():
+    device = torch.device("mps")
+elif torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
 
-model = models.resnet18(pretrained=True)
-model.classifier = nn.Linear(model.fc.in_features, 4) # 4 classes
+model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+model.fc = nn.Linear(model.fc.in_features, 4)  # ResNet: final layer is fc (not classifier)
+model = model.to(device)
 
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-# # training loop
-# for epoch in range(10):
-#     for images, labels in dataloader:
-#         outputs = model(images)
-#         loss = loss_fn(outputs, labels)
-#         optimizer.zero_grad()
-#         loss.backward()
-#         optimizer.step()
-#     print(f'Epoch {epoch+1}, Loss: {loss.item()}, Accuracy: {accuracy.item()}')
+# training loop
+model.train()
+for epoch in range(10):
+    epoch_loss = 0.0
+    for images, labels in dataloader:
+        images = images.to(device)
+        labels = labels.to(device)
+        outputs = model(images)
+        loss = loss_fn(outputs, labels)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        epoch_loss += loss.item()
+    avg_loss = epoch_loss / len(dataloader)
+    print(f'Epoch {epoch+1}/10, Avg Loss: {avg_loss:.4f}, Device: {device}')
+# save next to this script so you always know where it is (not cwd-dependent)
+_model_path = Path(__file__).resolve().parent / "model.pth"
+torch.save(model.state_dict(), _model_path)
+print(f"Saved weights to: {_model_path}")
 
-# # save the model
-# torch.save(model.state_dict(), 'model.pth')
+
