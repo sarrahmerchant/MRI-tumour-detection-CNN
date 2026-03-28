@@ -16,6 +16,7 @@ import torch.nn as nn
 transforms = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
+    # what do these values mean
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
@@ -33,6 +34,7 @@ model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
 model.fc = nn.Linear(model.fc.in_features, 4)  # ResNet: final layer is fc (not classifier)
 model = model.to(device)
 
+# understand loss functions
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
@@ -50,6 +52,7 @@ for epoch in range(10):
         optimizer.step()
         epoch_loss += loss.item()
     avg_loss = epoch_loss / len(dataloader)
+    # track training intervals
     print(f'Epoch {epoch+1}/10, Avg Loss: {avg_loss:.4f}, Device: {device}')
 # save next to this script so you always know where it is (not cwd-dependent)
 _model_path = Path(__file__).resolve().parent / "model.pth"
