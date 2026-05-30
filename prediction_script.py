@@ -1,4 +1,5 @@
 from __future__ import annotations
+from LLMExplanation import generate_plain_language_explanation
 
 from pathlib import Path
 
@@ -100,3 +101,15 @@ if __name__ == "__main__":
     visualization = show_cam_on_image(img, grayscale_cam)
     visualization.save("grad_cam.png")
 
+####### AI LLM Explanation #######
+
+result = {
+    "predicted_class": class_names[pred_idx],
+    "confidence": probs[pred_idx].item(),
+    "class_probabilities": {name: p.item() for name, p in zip(class_names, probs.tolist())},
+    "explanation_signal": "Grad-CAM highlighted the region most influential to the prediction."
+}
+
+explanation = generate_plain_language_explanation(result)
+print("\nAI Explanation:")
+print(explanation)
