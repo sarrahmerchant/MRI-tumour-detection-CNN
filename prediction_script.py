@@ -1,5 +1,4 @@
 from __future__ import annotations
-from LLMExplanation import generate_plain_language_explanation
 
 from pathlib import Path
 
@@ -101,15 +100,17 @@ if __name__ == "__main__":
     visualization = show_cam_on_image(img, grayscale_cam)
     visualization.save("grad_cam.png")
 
-####### AI LLM Explanation #######
+    ####### AI LLM Explanation #######
+    # Imported here so the module stays importable without an OPENAI_API_KEY.
+    from LLMExplanation import generate_plain_language_explanation
 
-result = {
-    "predicted_class": class_names[pred_idx],
-    "confidence": probs[pred_idx].item(),
-    "class_probabilities": {name: p.item() for name, p in zip(class_names, probs.tolist())},
-    "explanation_signal": "Grad-CAM highlighted the region most influential to the prediction."
-}
+    result = {
+        "predicted_class": class_names[pred_idx],
+        "confidence": probs[pred_idx].item(),
+        "class_probabilities": {name: float(p) for name, p in zip(class_names, probs.tolist())},
+        "explanation_signal": "Grad-CAM highlighted the region most influential to the prediction."
+    }
 
-explanation = generate_plain_language_explanation(result)
-print("\nAI Explanation:")
-print(explanation)
+    explanation = generate_plain_language_explanation(result)
+    print("\nAI Explanation:")
+    print(explanation)
